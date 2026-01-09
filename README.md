@@ -74,51 +74,6 @@ speed-test-app/
 └── eslint.config.js    # ESLint configuration
 ```
 
-## 🚀 Getting Started
-
-### 1️⃣ Install Dependencies
-
-First, install frontend dependencies:
-
-```bash
-npm install
-```
-
-Then, install backend dependencies:
-
-```bash
-cd server
-npm install
-cd ..
-```
-
-### 2️⃣ Run the Application
-
-You can run both frontend and backend together with a single command:
-
-```bash
-npm run dev:all
-```
-
-Or run them separately:
-
-**Terminal 1 - Frontend:**
-```bash
-npm run dev
-```
-
-**Terminal 2 - Backend:**
-```bash
-npm run server
-```
-
-### 3️⃣ Access the Application
-
-- **Frontend**: Open [http://localhost:5173](http://localhost:5173) in your browser
-- **Backend API**: Running on [http://localhost:5000](http://localhost:5000)
-
-## 🎨 Components Overview
-
 ### Main Components
 
 - **SpeedTestApp** - Main application container with state management
@@ -166,20 +121,6 @@ The speed test uses a full-stack approach with real measurements:
 
 ## 🔧 Configuration
 
-### Environment Variables
-
-**Frontend** (`.env.local`):
-```env
-VITE_API_URL=http://localhost:5000/api
-```
-
-**Backend** (`server/.env`):
-```env
-PORT=5000
-CORS_ORIGIN=http://localhost:5173
-NODE_ENV=development
-```
-
 ### Tailwind CSS
 
 The project uses Tailwind CSS via CDN in `index.html`. Customize in `tailwind.config.js`.
@@ -188,30 +129,6 @@ The project uses Tailwind CSS via CDN in `index.html`. Customize in `tailwind.co
 
 Vite configuration can be modified in `vite.config.js` for custom build settings.
 
-## 📦 Production Deployment
-
-### Frontend
-
-Build the frontend:
-```bash
-npm run build
-```
-
-The built files will be in the `dist/` folder. Deploy to services like:
-- Vercel
-- Netlify
-- GitHub Pages
-- Cloudflare Pages
-
-### Backend
-
-Deploy the backend to services like:
-- Heroku
-- Railway
-- DigitalOcean
-- AWS EC2/Elastic Beanstalk
-
-**Important**: Update `VITE_API_URL` in frontend environment variables to point to your deployed backend URL.
 
 ## 🌐 Browser Support
 
