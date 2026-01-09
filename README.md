@@ -41,8 +41,6 @@ Before you begin, ensure you have the following installed:
 - **Node.js** (v18 or higher recommended)
 - **npm** (comes with Node.js)
 
-```
-
 ## 📁 Project Structure
 
 ```
