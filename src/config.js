@@ -1,5 +1,7 @@
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// For Vercel deployment, use relative /api path
+// For local development with separate backend, use VITE_API_URL env variable
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export const API_ENDPOINTS = {
     PING: `${API_BASE_URL}/ping`,
