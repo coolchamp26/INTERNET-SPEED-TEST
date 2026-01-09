@@ -1,122 +1,146 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, Wifi, WifiOff, Clock, Smartphone, RefreshCw, History, Moon, Sun, TrendingUp, TrendingDown } from 'lucide-react';
+import API_ENDPOINTS from './config';
 
-// Speed Test Engine with working methods
+// Speed Test Engine with REAL backend API calls
 const SpeedTestEngine = {
-  // Generate random data blob
+  // Generate random data blob for upload tests
   generatePayload: (sizeInMB) => {
     const bytes = sizeInMB * 1024 * 1024;
     const arr = new Uint8Array(bytes);
-    for (let i = 0; i < bytes; i += 1024) {
+    // Fill with random data
+    for (let i = 0; i < bytes; i++) {
       arr[i] = Math.floor(Math.random() * 256);
     }
     return new Blob([arr]);
   },
 
-  // Measure download speed using in-memory data generation
+  // Measure REAL download speed from backend
   measureDownload: async (onProgress) => {
     const samples = [];
     const iterations = 3;
     const chunkSizeMB = 5;
 
     for (let i = 0; i < iterations; i++) {
-      const startTime = performance.now();
-      
-      // Simulate download by generating data locally (works cross-origin)
-      const testData = new Array(chunkSizeMB * 1024 * 1024);
-      for (let j = 0; j < testData.length; j++) {
-        testData[j] = Math.random();
-      }
-      
-      // Small fetch to actual endpoint to measure real network latency
       try {
-        const response = await fetch('https://www.cloudflare.com/cdn-cgi/trace', {
-          cache: 'no-store'
-        });
-        await response.text();
-      } catch (e) {
-        console.log('Network test:', e);
-      }
+        const startTime = performance.now();
 
-      const endTime = performance.now();
-      const durationSeconds = (endTime - startTime) / 1000;
-      
-      // Calculate speed based on data processed
-      const speedMbps = (chunkSizeMB * 8) / durationSeconds;
-      
-      // Add some realistic variance
-      const variance = 0.85 + Math.random() * 0.3;
-      samples.push(speedMbps * variance);
-      
-      onProgress?.((i + 1) / iterations);
-      
-      // Small delay between tests
-      await new Promise(resolve => setTimeout(resolve, 200));
+        // Fetch actual data from backend server
+        const response = await fetch(`${API_ENDPOINTS.DOWNLOAD}?size=${chunkSizeMB}`, {
+          method: 'GET',
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Download failed: ${response.status}`);
+        }
+
+        // Read the entire response body
+        const data = await response.blob();
+
+        const endTime = performance.now();
+        const durationSeconds = (endTime - startTime) / 1000;
+
+        // Calculate actual speed based on data transferred
+        const actualSizeMB = data.size / (1024 * 1024);
+        const speedMbps = (actualSizeMB * 8) / durationSeconds;
+
+        samples.push(speedMbps);
+        onProgress?.((i + 1) / iterations);
+
+        console.log(`Download test ${i + 1}: ${speedMbps.toFixed(2)} Mbps (${actualSizeMB.toFixed(2)}MB in ${durationSeconds.toFixed(2)}s)`);
+
+        // Small delay between tests
+        await new Promise(resolve => setTimeout(resolve, 300));
+      } catch (error) {
+        console.error('Download test error:', error);
+        throw error;
+      }
     }
 
     return samples.reduce((a, b) => a + b) / samples.length;
   },
 
-  // Measure upload speed simulation
+  // Measure REAL upload speed to backend
   measureUpload: async (onProgress) => {
     const samples = [];
     const iterations = 2;
     const payloadSizeMB = 3;
 
     for (let i = 0; i < iterations; i++) {
-      const startTime = performance.now();
-      
-      // Generate upload payload
-      const payload = SpeedTestEngine.generatePayload(payloadSizeMB);
-      
-      // Simulate processing time
-      const reader = new FileReader();
-      await new Promise(resolve => {
-        reader.onload = resolve;
-        reader.readAsArrayBuffer(payload);
-      });
+      try {
+        const startTime = performance.now();
 
-      const endTime = performance.now();
-      const durationSeconds = (endTime - startTime) / 1000;
-      
-      // Calculate upload speed
-      const speedMbps = (payloadSizeMB * 8) / durationSeconds;
-      
-      // Add realistic variance (upload is typically slower)
-      const variance = 0.6 + Math.random() * 0.25;
-      samples.push(speedMbps * variance);
-      
-      onProgress?.((i + 1) / iterations);
-      
-      await new Promise(resolve => setTimeout(resolve, 200));
+        // Generate upload payload
+        const payload = SpeedTestEngine.generatePayload(payloadSizeMB);
+
+        // Upload to backend server
+        const response = await fetch(API_ENDPOINTS.UPLOAD, {
+          method: 'POST',
+          body: payload,
+          headers: {
+            'Content-Type': 'application/octet-stream'
+          },
+          cache: 'no-store'
+        });
+
+        if (!response.ok) {
+          throw new Error(`Upload failed: ${response.status}`);
+        }
+
+        await response.json();
+
+        const endTime = performance.now();
+        const durationSeconds = (endTime - startTime) / 1000;
+
+        // Calculate upload speed
+        const speedMbps = (payloadSizeMB * 8) / durationSeconds;
+        samples.push(speedMbps);
+
+        onProgress?.((i + 1) / iterations);
+
+        console.log(`Upload test ${i + 1}: ${speedMbps.toFixed(2)} Mbps (${payloadSizeMB}MB in ${durationSeconds.toFixed(2)}s)`);
+
+        await new Promise(resolve => setTimeout(resolve, 300));
+      } catch (error) {
+        console.error('Upload test error:', error);
+        throw error;
+      }
     }
 
     return samples.reduce((a, b) => a + b) / samples.length;
   },
 
-  // Measure latency with working endpoint
+  // Measure REAL latency to backend
   measureLatency: async () => {
     const samples = [];
     const iterations = 5;
 
     for (let i = 0; i < iterations; i++) {
-      const startTime = performance.now();
-      
       try {
-        // Use Cloudflare's trace endpoint (CORS-friendly)
-        await fetch('https://www.cloudflare.com/cdn-cgi/trace', {
+        const startTime = performance.now();
+
+        // Ping the backend server
+        await fetch(API_ENDPOINTS.PING, {
           method: 'GET',
           cache: 'no-store'
         });
-        
+
         const endTime = performance.now();
-        samples.push(endTime - startTime);
+        const latency = endTime - startTime;
+        samples.push(latency);
+
+        console.log(`Ping ${i + 1}: ${latency.toFixed(2)}ms`);
+
+        await new Promise(resolve => setTimeout(resolve, 100));
       } catch (error) {
-        // Fallback: measure local processing time
-        samples.push(20 + Math.random() * 30);
+        console.error('Ping test error:', error);
+        // Use a penalty value if ping fails
+        samples.push(999);
       }
-      
-      await new Promise(resolve => setTimeout(resolve, 100));
     }
 
     return samples.reduce((a, b) => a + b) / samples.length;
@@ -127,7 +151,7 @@ const SpeedTestEngine = {
 const Speedometer = ({ value, maxValue, label, color }) => {
   const percentage = Math.min((value / maxValue) * 100, 100);
   const angle = (percentage / 100) * 180 - 90;
-  
+
   const circumference = 2 * Math.PI * 70;
   const offset = circumference - (percentage / 100) * circumference;
 
@@ -160,7 +184,7 @@ const Speedometer = ({ value, maxValue, label, color }) => {
             className="transition-all duration-1000 ease-out"
           />
         </svg>
-        
+
         {/* Center content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <div className="text-4xl font-bold" style={{ color }}>
@@ -187,7 +211,7 @@ const NetworkInfo = () => {
           rtt: connection.rtt || 'N/A'
         });
       };
-      
+
       updateInfo();
       connection.addEventListener('change', updateInfo);
       return () => connection.removeEventListener('change', updateInfo);
@@ -334,18 +358,18 @@ const SpeedTestApp = () => {
     setProgress(0);
   };
 
-  const avgDownload = history.length > 0 
-    ? history.reduce((sum, t) => sum + t.download, 0) / history.length 
+  const avgDownload = history.length > 0
+    ? history.reduce((sum, t) => sum + t.download, 0) / history.length
     : 0;
-  
-  const avgUpload = history.length > 0 
-    ? history.reduce((sum, t) => sum + t.upload, 0) / history.length 
+
+  const avgUpload = history.length > 0
+    ? history.reduce((sum, t) => sum + t.upload, 0) / history.length
     : 0;
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
       <div className="container mx-auto px-4 py-8 max-w-5xl">
-        
+
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-3">
@@ -375,7 +399,7 @@ const SpeedTestApp = () => {
 
         {/* Main Test Card */}
         <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl shadow-2xl p-8 mb-6 border border-gray-700">
-          
+
           {/* Speedometers */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <Speedometer
@@ -490,7 +514,7 @@ const SpeedTestApp = () => {
 
         {/* Footer */}
         <div className="text-center mt-8 text-gray-500 text-sm">
-          <p>Frontend-only speed testing • No data collection • Privacy-focused</p>
+          <p>Real-time speed testing with backend measurements • Privacy-focused</p>
         </div>
       </div>
     </div>
