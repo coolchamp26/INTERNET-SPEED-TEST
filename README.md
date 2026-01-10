@@ -2,6 +2,8 @@
 
 A modern, full-stack internet speed test application built with React and Node.js. Test your network performance with **real measurements** using a backend server, beautiful visualizations, and detailed metrics!
 
+> **Note**: This may be slow due to Vercel deployment.
+
 ![Speed Test App](https://img.shields.io/badge/React-19.2.0-blue?logo=react)
 ![Node.js](https://img.shields.io/badge/Node.js-Express-green?logo=node.js)
 ![Vite](https://img.shields.io/badge/Vite-7.2.4-646CFF?logo=vite)
